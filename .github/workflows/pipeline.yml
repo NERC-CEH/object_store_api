@@ -14,7 +14,7 @@ jobs:
   build-test-docker:
     uses: NERC-CEH/dri-cicd/.github/workflows/build-docker.yml@main
     with:
-      package_name: mypackage
+      package_name: os_api
       test_image: false
   
   deploy-docker:
