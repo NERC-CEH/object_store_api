@@ -2,21 +2,19 @@
 FastAPI for uploading images to an S3 server.
 """
 
-from pathlib import Path
-from typing import List
-from time import perf_counter
-import json
 import asyncio
+import json
 import logging
+from pathlib import Path
+from time import perf_counter
+
 import aioboto3
 import boto3
+import uvicorn
 from botocore.exceptions import NoCredentialsError, PartialCredentialsError
-
-from fastapi import FastAPI, Form, File, UploadFile, Query
-from fastapi.responses import JSONResponse, RedirectResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi import FastAPI, File, Form, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
-
+from fastapi.responses import JSONResponse, RedirectResponse
 
 # Configure logging
 logging.basicConfig(
@@ -67,13 +65,13 @@ session = aioboto3.Session()
 
 
 @app.get("/", include_in_schema=False)
-async def main():
+async def main() -> RedirectResponse:
     "Redirect main root url to the documentation."
     return RedirectResponse(url="/docs")
 
 
 @app.post("/create-bucket/", tags=["Data"])
-async def create_bucket(bucket_name: str = Query("", description="")):
+async def create_bucket(bucket_name: str = Query("", description="")) -> JSONResponse:
     "Endpoint to create a new bucket in the server."
     async with session.client(
         "s3",
@@ -102,7 +100,7 @@ async def create_bucket(bucket_name: str = Query("", description="")):
 async def generate_presigned_url(
     filename: str = Form(...),
     file_type: str = Form(...),
-):
+) -> JSONResponse:
     "Endpoint to generate a unique presigned url for uploading files."
     bucket_name = ""
     key = filename
@@ -132,8 +130,8 @@ async def generate_presigned_url(
 
 @app.post("/upload/", tags=["Data"])
 async def upload(
-    files: List[UploadFile] = File(...),
-):
+    files: list[UploadFile] = File(...),
+) -> JSONResponse:
     "Endpoint to upload a list of files to the server."
     start_time = perf_counter()
     s3_bucket_name = ""
@@ -157,7 +155,7 @@ async def upload(
     )
 
 
-async def upload_file(s3_bucket_name, key, file):
+async def upload_file(s3_bucket_name: str, key: str, file: UploadFile) -> None:
     "Endpoint to upload a single file to the server."
     async with session.client(
         "s3",
@@ -178,7 +176,7 @@ async def upload_file(s3_bucket_name, key, file):
 
 
 @app.post("/check-file-exist/", tags=["Data"])
-async def check_file_exist(filename: str = Form(...)):
+async def check_file_exist(filename: str = Form(...)) -> JSONResponse:
     "Endpoint to check if file already exists in the server."
     bucket_name = ""
     key = filename
@@ -208,6 +206,4 @@ async def check_file_exist(filename: str = Form(...)):
 
 
 if __name__ == "__main__":
-    import uvicorn
-
     uvicorn.run(app, host="0.0.0.0", port=8080)
