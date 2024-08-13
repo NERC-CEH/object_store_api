@@ -1,13 +1,13 @@
-mypackage package
+os_api package
 =================
 
 Submodules
 ----------
 
-mypackage.module module
+os_api.module module
 -----------------------
 
-.. automodule:: mypackage.module
+.. automodule:: os_api.module
    :members:
    :undoc-members:
    :show-inheritance:
@@ -15,7 +15,7 @@ mypackage.module module
 Module contents
 ---------------
 
-.. automodule:: mypackage
+.. automodule:: os_api
    :members:
    :undoc-members:
    :show-inheritance:

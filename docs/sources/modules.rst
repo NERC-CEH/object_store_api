@@ -1,7 +1,7 @@
-mypackage
+os_api
 =========
 
 .. toctree::
    :maxdepth: 4
 
-   mypackage
+   os_api
