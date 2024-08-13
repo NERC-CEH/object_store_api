@@ -1,7 +1,8 @@
 """
-FastAPI for uploading images to an S3 server. 
+FastAPI for uploading images to an S3 server.
 """
 
+from pathlib import Path
 from typing import List
 from time import perf_counter
 import json
@@ -11,10 +12,10 @@ import aioboto3
 import boto3
 from botocore.exceptions import NoCredentialsError, PartialCredentialsError
 
-from os_api import FastAPI, Form, File, UploadFile, Query
-from os_api.responses import JSONResponse, RedirectResponse
-from os_api.staticfiles import StaticFiles
-from os_api.middleware.cors import CORSMiddleware
+from fastapi import FastAPI, Form, File, UploadFile, Query
+from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 
 
 # Configure logging
@@ -53,7 +54,7 @@ app.add_middleware(
 
 
 # Load AWS credentials and S3 bucket name from config file
-with open("credentials.json", encoding="utf-8") as config_file:
+with Path(__file__).with_name("credentials.json").open("r", encoding="utf-8") as config_file:
     aws_credentials = json.load(config_file)
 
 AWS_ACCESS_KEY_ID = aws_credentials["AWS_ACCESS_KEY_ID"]
@@ -67,7 +68,7 @@ session = aioboto3.Session()
 
 @app.get("/", include_in_schema=False)
 async def main():
-    "Redirect main root url to the documentation. "
+    "Redirect main root url to the documentation."
     return RedirectResponse(url="/docs")
 
 
@@ -75,37 +76,32 @@ async def main():
 async def create_bucket(bucket_name: str = Query("", description="")):
     "Endpoint to create a new bucket in the server."
     async with session.client(
-            "s3",
-            aws_access_key_id=AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-            endpoint_url=AWS_URL_ENDPOINT,
+        "s3",
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+        endpoint_url=AWS_URL_ENDPOINT,
     ) as s3_client:
         try:
             await s3_client.create_bucket(Bucket=bucket_name)
             return JSONResponse(
                 status_code=200,
-                content={
-                    "message": f"Bucket '{bucket_name}' created successfully"
-                },
+                content={"message": f"Bucket '{bucket_name}' created successfully"},
             )
         except s3_client.exceptions.BucketAlreadyExists:
-            return JSONResponse(
-                status_code=409,
-                content={f"Bucket {bucket_name} already exists."})
+            return JSONResponse(status_code=409, content={f"Bucket {bucket_name} already exists."})
         except s3_client.exceptions.BucketAlreadyOwnedByYou:
             return JSONResponse(
                 status_code=409,
                 content={f"Bucket {bucket_name} is already owned by you."},
             )
         except Exception as e:
-            return JSONResponse(status_code=500,
-                                content={f"Error creating bucket: {str(e)}"})
+            return JSONResponse(status_code=500, content={f"Error creating bucket: {str(e)}"})
 
 
 @app.post("/generate-presigned-url/", tags=["Data"])
 async def generate_presigned_url(
-        filename: str = Form(...),
-        file_type: str = Form(...),
+    filename: str = Form(...),
+    file_type: str = Form(...),
 ):
     "Endpoint to generate a unique presigned url for uploading files."
     bucket_name = ""
@@ -121,27 +117,23 @@ async def generate_presigned_url(
         # Generate a presigned URL for the S3
         presigned_url = s3.generate_presigned_url(
             "put_object",
-            Params={
-                "Bucket": bucket_name,
-                "Key": key,
-                "ContentType": file_type
-            },
+            Params={"Bucket": bucket_name, "Key": key, "ContentType": file_type},
             ExpiresIn=3600,
         )  # URL expires in 1 hour
 
         return JSONResponse(status_code=200, content=presigned_url)
     except NoCredentialsError:
-        return JSONResponse(status_code=403,
-                            content={"error": "No AWS credentials found"})
+        return JSONResponse(status_code=403, content={"error": "No AWS credentials found"})
     except PartialCredentialsError:
-        return JSONResponse(status_code=403,
-                            content={"error": "Incomplete AWS credentials"})
+        return JSONResponse(status_code=403, content={"error": "Incomplete AWS credentials"})
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
 
 @app.post("/upload/", tags=["Data"])
-async def upload(files: List[UploadFile] = File(...), ):
+async def upload(
+    files: List[UploadFile] = File(...),
+):
     "Endpoint to upload a list of files to the server."
     start_time = perf_counter()
     s3_bucket_name = ""
@@ -168,24 +160,20 @@ async def upload(files: List[UploadFile] = File(...), ):
 async def upload_file(s3_bucket_name, key, file):
     "Endpoint to upload a single file to the server."
     async with session.client(
-            "s3",
-            aws_access_key_id=AWS_ACCESS_KEY_ID,
-            aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-            endpoint_url=AWS_URL_ENDPOINT,
+        "s3",
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+        endpoint_url=AWS_URL_ENDPOINT,
     ) as s3_client:
         try:
             # Upload updated file to S3
-            await s3_client.upload_fileobj(file.file, s3_bucket_name,
-                                           f"{key}/{file.filename}")
+            await s3_client.upload_fileobj(file.file, s3_bucket_name, f"{key}/{file.filename}")
             # print(f"File {key}/{file.filename} uploaded successfully.")
         except Exception as e:
-            logger.error("Error when uploading %s to %s/%s.", file.filename,
-                         s3_bucket_name, key)
+            logger.error("Error when uploading %s to %s/%s.", file.filename, s3_bucket_name, key)
             return JSONResponse(
                 status_code=500,
-                content={
-                    "message": f"Error uploading {key}/{file.filename}: {e}"
-                },
+                content={"message": f"Error uploading {key}/{file.filename}: {e}"},
             )
 
 
@@ -212,15 +200,14 @@ async def check_file_exist(filename: str = Form(...)):
             return JSONResponse(status_code=200, content=message)
         return JSONResponse(status_code=500, content={"message": f"{e}"})
     except NoCredentialsError:
-        return JSONResponse(status_code=403,
-                            content={"message": "No AWS credentials found"})
+        return JSONResponse(status_code=403, content={"message": "No AWS credentials found"})
     except PartialCredentialsError:
-        return JSONResponse(status_code=403,
-                            content={"message": "Incomplete AWS credentials"})
+        return JSONResponse(status_code=403, content={"message": "Incomplete AWS credentials"})
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": f"{e}"})
 
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8080)

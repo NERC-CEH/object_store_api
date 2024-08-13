@@ -1,13 +1,13 @@
-os_api package
-=================
+os\_api package
+===============
 
 Submodules
 ----------
 
-os_api.module module
------------------------
+os\_api.api module
+------------------
 
-.. automodule:: os_api.module
+.. automodule:: os_api.api
    :members:
    :undoc-members:
    :show-inheritance:
