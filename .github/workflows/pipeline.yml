@@ -9,7 +9,8 @@ permissions:
 
 jobs:
   test-python:
-    uses: ./.github/workflows/test-python.yml@main
+    # "cannot specify version when calling local workflows"
+    uses: ./.github/workflows/test-python.yml
   
   build-docs:
     uses: NERC-CEH/dri-cicd/.github/workflows/build-docs.yml@main
