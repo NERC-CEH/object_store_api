@@ -93,6 +93,36 @@ pip install -e .[test]
 pytest
 ```
 
+## Run the API 
+
+This needs a set of credentials - an Access Key, a Secret Key and an Endpoint.
+
+[Overview of obtaining these details from JASMIN](https://github.com/NERC-CEH/object_store_tutorial/?tab=readme-ov-file#an-introduction-to-object-storage)
+
+`.env` contains variables which hold the key-value pairs, they are automatically loaded when you run the API. The key names all include `AWS` because they come originally from libraries to work with Amazon s3 storage, but JASMIN supports the same de facto standard.
+
+Contents of `.env`:
+
+```
+AWS_ACCESS_KEY_ID="key goes here"
+AWS_SECRET_ACCESS_KEY="secret goes here"
+AWS_URL_ENDPOINT="url goes here"
+```
+
+### Standalone, for testing
+
+`python src/os_api/api.py`
+
+This will bring up the OpenAPI documentation on localhost:8080
+
+### With uvicorn / nginx 
+
+TBD
+
+### In docker
+
+TBD if this proves useful - current deployment target is Posit Connect
+
 ### Automatic Versioning
 
 This codebase is set up using [autosemver](https://autosemver.readthedocs.io/en/latest/usage.html#) a tool that uses git commit history to calculate the package version. Each time you make a commit, it increments the patch version by 1. You can increment by:
