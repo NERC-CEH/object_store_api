@@ -10,10 +10,13 @@ permissions:
 jobs:
   test-python:
     uses: NERC-CEH/dri-cicd/.github/workflows/test-python.yml@main
+  
+  build-docs:
+    uses: NERC-CEH/dri-cicd/.github/workflows/build-docs.yml@main
 
   deploy-docs:
     uses: NERC-CEH/dri-cicd/.github/workflows/deploy-docs.yml@main
     with:
       pages_artifact_name: ${{ needs.build-docs.outputs.pages_artifact_name }}
     if: ${{ github.ref_name == 'main' || github.head_ref == 'main'}}
-    needs: [test-python, build-docs, build-test-docker]
+    needs: [test-python, build-docs]
