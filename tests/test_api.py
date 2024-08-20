@@ -11,6 +11,8 @@ from os_api.api import app
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
+# TODO resolve how moto should work with aioboto3 Session + fastapi dependency overrides
+
 
 client = TestClient(app)
 
@@ -19,9 +21,10 @@ def test_read_main():
     assert response.status_code == 200
 
 
+# @pytest.mark.asyncio  # TODO see above, mock bucket
 def test_create_bucket():
-
-    response = client.post('create_bucket')
+    params = {'bucket_name': 'test_bucket'}
+    response = client.post('create_bucket', params=params)
     assert response
 
 
