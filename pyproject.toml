@@ -20,7 +20,7 @@ authors = [{ name = "John Doe", email = "johdoe@ceh.ac.uk" }]
 description = "A minimal setup for a template package."
 
 [project.optional-dependencies]
-test = ["pytest", "pytest-cov", "parameterized", "httpx"]
+test = ["pytest", "pytest-cov", "parameterized", "httpx", "moto"]
 docs = ["sphinx", "sphinx-copybutton", "sphinx-rtd-theme"]
 lint = ["ruff"]
 dev = ["os_api[test,docs,lint]"]
