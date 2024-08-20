@@ -1,22 +1,13 @@
-# Python Project Template
+# Object Store API 
 
-[![tests badge](https://github.com/NERC-CEH/python-template/actions/workflows/pipeline.yml/badge.svg)](https://github.com/NERC-CEH/python-template/actions)
-[![docs badge](https://github.com/NERC-CEH/python-template/actions/workflows/deploy-docs.yml/badge.svg)](https://nerc-ceh.github.io/python-template/)
+[Read the docs!](https://nerc-ceh.github.io/object_store_api)
 
-[Read the docs!](https://nerc-ceh.github.io/python-template)
+This repository contains a web API designed to make it easier to interact with, and build applications on, research data held in an s3 object store.
 
-This repository is a template for a basic Python project. Included here is:
+It was originally part of the [AMI system](https://github.com/AMI-system) for collecting and classifying images of moths from field cameras, and is intended for use in other projects that have a small to medium sized collection of images or sound samples and want to automate more of their data flow.
 
-* Example Python package
-* Tests
-* Documentation
-* Automatic incremental versioning
-* CI/CD
-    * Installs and tests the package
-    * Builds documentation on branches
-    * Deploys documentation on main branch
-    * Deploys docker image to AWS ECR
-* Githook to ensure linting and code checking
+The install and setup documentation comes from the useful [NERC-CEH python project template](https://github.com/NERC-CEH/python-template)
+
 
 ## Getting Started
 
@@ -32,9 +23,7 @@ This will set this repo up to use the git hooks in the `.githooks/` directory. T
 
 ### Installing the package
 
-This package is configured to use optional dependencies based on what you are doing with the code.
-
-As a user, you would install the code with only the dependencies needed to run it:
+Install the code with only the dependencies needed to run it:
 
 ```
 pip install .
@@ -64,24 +53,7 @@ The docs, tests, and linter packages can be installed together with:
 pip install -e .[dev]
 ```
 
-### Making it Your Own
-
-This repo has a single package in the `./src/...` path called `os_api` (creative I know). Change this to the name of your package and update it in:
-
-* `docs/conf.py`
-* `src/**/*.py`
-* `tests/**/*.py`
-* `pyproject.toml`
-
-To make thing move a bit faster, use the script `./rename-package.sh` to rename all references of `os_api` to whatever you like. For example:
-
-```
-./rename-package.sh "acoolnewname"
-```
-
-Will rename the package and all references to "acoolnewname"
-
-After doing this it is recommended to also run:
+### Documentation 
 
 ```
 cd docs
@@ -89,8 +61,6 @@ make apidoc
 ```
 
 To keep your documentation in sync with the package name. You may need to delete a file called `os_api.rst` from `./docs/sources/...`
-
-### Deploying Docs to GitHub Pages
 
 If you want docs to be published to github pages automatically, go to your repo settings and enable docs from GitHub Actions and the workflows will do the rest.
 
@@ -110,7 +80,7 @@ make apidoc
 
 This will populate `./docs/sources/...` with `*.rst` files for each Python module, which may be included into the documentation.
 
-Documentation can then be built locally by running `make html`, or found on the [GitHub Deployment](https://nerc-ceh.github.io/python-template).
+Documentation can then be built locally by running `make html`
 
 ### Run the Tests
 
