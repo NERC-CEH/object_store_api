@@ -3,15 +3,15 @@ FastAPI for uploading images to an S3 server.
 """
 
 import asyncio
-import json
 import logging
-from pathlib import Path
+import os
 from time import perf_counter
 
 import aioboto3
 import boto3
 import uvicorn
 from botocore.exceptions import NoCredentialsError, PartialCredentialsError
+from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
@@ -51,13 +51,13 @@ app.add_middleware(
 )
 
 
-# Load AWS credentials and S3 bucket name from config file
-with Path(__file__).with_name("credentials.json").open("r", encoding="utf-8") as config_file:
-    aws_credentials = json.load(config_file)
+# Load AWS credentials and S3 bucket name from .env file
+# Rather than depend on the presence of credentials.json in the package
+load_dotenv()
 
-AWS_ACCESS_KEY_ID = aws_credentials["AWS_ACCESS_KEY_ID"]
-AWS_SECRET_ACCESS_KEY = aws_credentials["AWS_SECRET_ACCESS_KEY"]
-AWS_URL_ENDPOINT = aws_credentials["AWS_URL_ENDPOINT"]
+AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", "")
+AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
+AWS_URL_ENDPOINT = os.environ.get("AWS_URL_ENDPOINT", "")
 
 CONCURRENCY_LIMIT = 200  # Adjust this value based on your server capabilities
 
