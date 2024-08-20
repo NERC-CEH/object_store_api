@@ -6,17 +6,18 @@ permissions:
   id-token: write
   actions: read
 
-
 jobs:
   test-python:
     # "cannot specify version when calling local workflows"
     uses: ./.github/workflows/test-python.yml
   
+  # Give up on directly reusing workflows die to lack of repo permissions  
   build-docs:
-    uses: NERC-CEH/dri-cicd/.github/workflows/build-docs.yml@main
+    uses: ./.github/workflows/build-docs.yml
 
+    
   deploy-docs:
-    uses: NERC-CEH/dri-cicd/.github/workflows/deploy-docs.yml@main
+    uses: ./.github/workflows/deploy-docs.yml
     with:
       pages_artifact_name: ${{ needs.build-docs.outputs.pages_artifact_name }}
     if: ${{ github.ref_name == 'main' || github.head_ref == 'main'}}

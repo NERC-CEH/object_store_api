@@ -106,7 +106,7 @@ This codebase is set up using [autosemver](https://autosemver.readthedocs.io/en/
 
 ### Docker and the ECR
 
-The python code is packaged into a docker image and pushed to the AWS ECR. For the deployment to succeed you must:
+The python code can be packaged into a docker image and pushed to the AWS ECR. For the deployment to succeed you must:
 
 * Add 2 secrets to the GitHub Actions:
     * AWS_REGION: \<our-region\>
