@@ -1,3 +1,12 @@
+"""
+Minimum possible tests for Object Store API
+
+Not got into detail of mocking components and responses -
+is there much value or do we end up testing FastAPI?
+
+At level of "do endpoints exist, and resolve"
+"""
+
 from os_api.api import app
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
@@ -13,22 +22,23 @@ def test_read_main():
 def test_create_bucket():
 
     response = client.post('create_bucket')
-    print(response.content)
+    assert response
 
 
 def test_generate_presigned_url():
 
     response = client.post('/generate-presigned-url/')
-
+    assert response
 
 def test_upload():
 
     response = client.post('/upload/')
+    assert response
 
 def test_check_file_exist():
 
     response = client.post('/check-file-exist/')
+    assert response
 
 def test_import_api_module():
     import os_api.api
-
