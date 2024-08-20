@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   test-python:
-    uses: NERC-CEH/dri-cicd/.github/workflows/test-python.yml@main
+    uses: ./.github/workflows/test-python.yml@main
   
   build-docs:
     uses: NERC-CEH/dri-cicd/.github/workflows/build-docs.yml@main
