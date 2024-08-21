@@ -61,7 +61,13 @@ AWS_URL_ENDPOINT = os.environ.get("AWS_URL_ENDPOINT", "")
 
 CONCURRENCY_LIMIT = 200  # Adjust this value based on your server capabilities
 
-session = aioboto3.Session()
+
+# Wrapped in function to use as dependency_override
+def boto_session() -> aioboto3.Session:
+    return aioboto3.Session()
+
+
+session = boto_session()
 
 
 @app.get("/", include_in_schema=False)
@@ -86,14 +92,18 @@ async def create_bucket(bucket_name: str = Query("", description="")) -> JSONRes
                 content={"message": f"Bucket '{bucket_name}' created successfully"},
             )
         except s3_client.exceptions.BucketAlreadyExists:
-            return JSONResponse(status_code=409, content={f"Bucket {bucket_name} already exists."})
+            return JSONResponse(
+                status_code=409, content={f"Bucket {bucket_name} already exists."}
+            )
         except s3_client.exceptions.BucketAlreadyOwnedByYou:
             return JSONResponse(
                 status_code=409,
                 content={f"Bucket {bucket_name} is already owned by you."},
             )
         except Exception as e:
-            return JSONResponse(status_code=500, content={f"Error creating bucket: {str(e)}"})
+            return JSONResponse(
+                status_code=500, content={f"Error creating bucket: {str(e)}"}
+            )
 
 
 @app.post("/generate-presigned-url/", tags=["Data"])
@@ -121,9 +131,13 @@ async def generate_presigned_url(
 
         return JSONResponse(status_code=200, content=presigned_url)
     except NoCredentialsError:
-        return JSONResponse(status_code=403, content={"error": "No AWS credentials found"})
+        return JSONResponse(
+            status_code=403, content={"error": "No AWS credentials found"}
+        )
     except PartialCredentialsError:
-        return JSONResponse(status_code=403, content={"error": "Incomplete AWS credentials"})
+        return JSONResponse(
+            status_code=403, content={"error": "Incomplete AWS credentials"}
+        )
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
@@ -165,10 +179,14 @@ async def upload_file(s3_bucket_name: str, key: str, file: UploadFile) -> None:
     ) as s3_client:
         try:
             # Upload updated file to S3
-            await s3_client.upload_fileobj(file.file, s3_bucket_name, f"{key}/{file.filename}")
+            await s3_client.upload_fileobj(
+                file.file, s3_bucket_name, f"{key}/{file.filename}"
+            )
             # print(f"File {key}/{file.filename} uploaded successfully.")
         except Exception as e:
-            logger.error("Error when uploading %s to %s/%s.", file.filename, s3_bucket_name, key)
+            logger.error(
+                "Error when uploading %s to %s/%s.", file.filename, s3_bucket_name, key
+            )
             return JSONResponse(
                 status_code=500,
                 content={"message": f"Error uploading {key}/{file.filename}: {e}"},
@@ -198,9 +216,13 @@ async def check_file_exist(filename: str = Form(...)) -> JSONResponse:
             return JSONResponse(status_code=200, content=message)
         return JSONResponse(status_code=500, content={"message": f"{e}"})
     except NoCredentialsError:
-        return JSONResponse(status_code=403, content={"message": "No AWS credentials found"})
+        return JSONResponse(
+            status_code=403, content={"message": "No AWS credentials found"}
+        )
     except PartialCredentialsError:
-        return JSONResponse(status_code=403, content={"message": "Incomplete AWS credentials"})
+        return JSONResponse(
+            status_code=403, content={"message": "Incomplete AWS credentials"}
+        )
     except Exception as e:
         return JSONResponse(status_code=500, content={"message": f"{e}"})
 
