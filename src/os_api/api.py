@@ -67,6 +67,10 @@ def boto_session() -> aioboto3.Session:
     return aioboto3.Session()
 
 
+def s3_endpoint() -> str:
+    return os.environ.get("AWS_URL_ENDPOINT", "")
+
+
 session = boto_session()
 
 
@@ -83,7 +87,7 @@ async def create_bucket(bucket_name: str = Query("", description="")) -> JSONRes
         "s3",
         aws_access_key_id=AWS_ACCESS_KEY_ID,
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        endpoint_url=AWS_URL_ENDPOINT,
+        endpoint_url=s3_endpoint(),
     ) as s3_client:
         try:
             await s3_client.create_bucket(Bucket=bucket_name)
@@ -115,7 +119,7 @@ async def generate_presigned_url(
         "s3",
         aws_access_key_id=AWS_ACCESS_KEY_ID,
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        endpoint_url=AWS_URL_ENDPOINT,
+        endpoint_url=s3_endpoint(),
     )
     try:
         # Generate a presigned URL for the S3
@@ -167,7 +171,7 @@ async def upload_file(s3_bucket_name: str, key: str, file: UploadFile) -> None:
         "s3",
         aws_access_key_id=AWS_ACCESS_KEY_ID,
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        endpoint_url=AWS_URL_ENDPOINT,
+        endpoint_url=s3_endpoint(),
     ) as s3_client:
         try:
             # Upload updated file to S3
@@ -191,7 +195,7 @@ async def check_file_exist(filename: str = Form(...)) -> JSONResponse:
         "s3",
         aws_access_key_id=AWS_ACCESS_KEY_ID,
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        endpoint_url=AWS_URL_ENDPOINT,
+        endpoint_url=s3_endpoint(),
     )
 
     try:
