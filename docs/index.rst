@@ -4,7 +4,7 @@
    contain the root `toctree` directive.
 
 Object Store API documentation
-========================
+==============================
 
 This API is intended to simplify the creation and management of research data held in "object storage" - typically using s3, a de facto standard made popular by Amazon AWS, which the JASMIN data analysis facility makes freely available for research purposes.
 
