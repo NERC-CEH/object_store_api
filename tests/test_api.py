@@ -7,7 +7,7 @@ is there much value or do we end up testing FastAPI?
 At level of "do endpoints exist, and resolve"
 """
 import os
-from os_api.api import app, boto_session, s3_endpoint
+from os_api.api import app, s3_endpoint
 import pytest
 import aioboto3
 from fastapi import FastAPI
@@ -15,7 +15,6 @@ from fastapi.testclient import TestClient
 from moto import mock_aws
 import logging
 logging.basicConfig(level=logging.INFO)
-# TODO resolve how moto should work with aioboto3 Session + fastapi dependency overrides
 
 from moto.server import ThreadedMotoServer
 
@@ -45,23 +44,31 @@ def test_create_bucket(moto_server):
     params = {'bucket_name': 'test_bucket'}
     response = client.post('/create-bucket/', params=params)
     assert response.status_code == 200
-    print(response.content)
 
 
-def test_generate_presigned_url():
+def test_generate_presigned_url(moto_server):
+    params = {'filename': 'demo.txt', 
+              'file_type': 'text/plain',
+              'bucket_name': 'test_bucket'}
+    response = client.post('/generate-presigned-url/', data=params)
+    assert response.status_code == 200
 
-    response = client.post('/generate-presigned-url/')
-    assert response
 
-def test_upload():
+def test_upload(text_file):
+    data = {'bucket_name': 'test_bucket'}
+    response = client.post('/create-bucket/', params=data)
+    response = client.post('/upload/', data=data, files=[('files', text_file)])
+    assert response.status_code == 200
 
-    response = client.post('/upload/')
-    assert response
 
-def test_check_file_exist():
+def test_check_file_exist(text_file):
+    data = {'bucket_name': 'test_bucket'}
+    response = client.post('/create-bucket/', params=data)
+    response = client.post('/upload/', data=data, files=[('files', text_file)])
+    data['filename'] = "1_test.txt"
+    response = client.post('/check-file-exist/', data=data)
+    assert response.status_code == 200
 
-    response = client.post('/check-file-exist/')
-    assert response
 
 def test_import_api_module():
     import os_api.api
