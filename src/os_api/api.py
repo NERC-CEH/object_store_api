@@ -3,15 +3,15 @@ FastAPI for uploading images to an S3 server.
 """
 
 import asyncio
-import json
 import logging
-from pathlib import Path
+import os
 from time import perf_counter
 
 import aioboto3
 import boto3
 import uvicorn
 from botocore.exceptions import NoCredentialsError, PartialCredentialsError
+from dotenv import load_dotenv
 from fastapi import FastAPI, File, Form, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, RedirectResponse
@@ -51,17 +51,36 @@ app.add_middleware(
 )
 
 
-# Load AWS credentials and S3 bucket name from config file
-with Path(__file__).with_name("credentials.json").open("r", encoding="utf-8") as config_file:
-    aws_credentials = json.load(config_file)
+# Load AWS credentials and S3 bucket name from .env file
+# Rather than depend on the presence of credentials.json in the package
+load_dotenv()
 
-AWS_ACCESS_KEY_ID = aws_credentials["AWS_ACCESS_KEY_ID"]
-AWS_SECRET_ACCESS_KEY = aws_credentials["AWS_SECRET_ACCESS_KEY"]
-AWS_URL_ENDPOINT = aws_credentials["AWS_URL_ENDPOINT"]
+AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID", "")
+AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY", "")
+AWS_URL_ENDPOINT = os.environ.get("AWS_URL_ENDPOINT", "")
 
 CONCURRENCY_LIMIT = 200  # Adjust this value based on your server capabilities
 
-session = aioboto3.Session()
+
+# Wrapped in functions, so we can use FastAPI TestClient dependency_override
+def aioboto3_session() -> aioboto3.Session:
+    return aioboto3.Session()
+
+
+session = aioboto3_session()
+
+
+def s3_endpoint() -> str:
+    return os.environ.get("AWS_URL_ENDPOINT", "")
+
+
+def boto3_client() -> boto3.Session:
+    return boto3.client(
+        "s3",
+        aws_access_key_id=AWS_ACCESS_KEY_ID,
+        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
+        endpoint_url=s3_endpoint(),
+    )
 
 
 @app.get("/", include_in_schema=False)
@@ -77,7 +96,7 @@ async def create_bucket(bucket_name: str = Query("", description="")) -> JSONRes
         "s3",
         aws_access_key_id=AWS_ACCESS_KEY_ID,
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        endpoint_url=AWS_URL_ENDPOINT,
+        endpoint_url=s3_endpoint(),
     ) as s3_client:
         try:
             await s3_client.create_bucket(Bucket=bucket_name)
@@ -98,19 +117,15 @@ async def create_bucket(bucket_name: str = Query("", description="")) -> JSONRes
 
 @app.post("/generate-presigned-url/", tags=["Data"])
 async def generate_presigned_url(
+    bucket_name: str = Form(...),
     filename: str = Form(...),
     file_type: str = Form(...),
 ) -> JSONResponse:
     "Endpoint to generate a unique presigned url for uploading files."
-    bucket_name = ""
     key = filename
 
-    s3 = boto3.client(
-        "s3",
-        aws_access_key_id=AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        endpoint_url=AWS_URL_ENDPOINT,
-    )
+    s3 = boto3_client()
+
     try:
         # Generate a presigned URL for the S3
         presigned_url = s3.generate_presigned_url(
@@ -130,15 +145,15 @@ async def generate_presigned_url(
 
 @app.post("/upload/", tags=["Data"])
 async def upload(
+    bucket_name: str = Form(...),
     files: list[UploadFile] = File(...),
 ) -> JSONResponse:
-    "Endpoint to upload a list of files to the server."
+    """Endpoint to upload a list of files to the server."""
     start_time = perf_counter()
-    s3_bucket_name = ""
     key = ""
 
     try:
-        tasks = [upload_file(s3_bucket_name, key, file) for file in files]
+        tasks = [upload_file(bucket_name, key, file) for file in files]
         await asyncio.gather(*tasks)
     except Exception as e:
         print("Error:", e)
@@ -155,20 +170,20 @@ async def upload(
     )
 
 
-async def upload_file(s3_bucket_name: str, key: str, file: UploadFile) -> None:
+async def upload_file(bucket_name: str, key: str, file: UploadFile) -> None:
     "Endpoint to upload a single file to the server."
     async with session.client(
         "s3",
         aws_access_key_id=AWS_ACCESS_KEY_ID,
         aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        endpoint_url=AWS_URL_ENDPOINT,
+        endpoint_url=s3_endpoint(),
     ) as s3_client:
         try:
             # Upload updated file to S3
-            await s3_client.upload_fileobj(file.file, s3_bucket_name, f"{key}/{file.filename}")
+            await s3_client.upload_fileobj(file.file, bucket_name, f"{key}/{file.filename}")
             # print(f"File {key}/{file.filename} uploaded successfully.")
         except Exception as e:
-            logger.error("Error when uploading %s to %s/%s.", file.filename, s3_bucket_name, key)
+            logger.error("Error when uploading %s to %s/%s.", file.filename, bucket_name, key)
             return JSONResponse(
                 status_code=500,
                 content={"message": f"Error uploading {key}/{file.filename}: {e}"},
@@ -176,17 +191,11 @@ async def upload_file(s3_bucket_name: str, key: str, file: UploadFile) -> None:
 
 
 @app.post("/check-file-exist/", tags=["Data"])
-async def check_file_exist(filename: str = Form(...)) -> JSONResponse:
+async def check_file_exist(bucket_name: str = Form(...), filename: str = Form(...)) -> JSONResponse:
     "Endpoint to check if file already exists in the server."
-    bucket_name = ""
     key = filename
 
-    s3 = boto3.client(
-        "s3",
-        aws_access_key_id=AWS_ACCESS_KEY_ID,
-        aws_secret_access_key=AWS_SECRET_ACCESS_KEY,
-        endpoint_url=AWS_URL_ENDPOINT,
-    )
+    s3 = boto3_client()
 
     try:
         s3.head_object(Bucket=bucket_name, Key=key)
