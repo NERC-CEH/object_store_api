@@ -38,7 +38,7 @@ pip install -e .[docs]
 To work on tests:
 
 ```
-pip install -e .[tests]
+pip install -e .[test]
 ```
 
 To run the linter and githook:
