@@ -89,6 +89,18 @@ async def main() -> RedirectResponse:
     return RedirectResponse(url="/docs")
 
 
+@app.get("/list-buckets/")
+async def list_buckets() -> JSONResponse:
+    "Endpoint to create a new bucket in the server."
+    s3 = boto3_client()
+    bucket_names = [n["Name"] for n in s3.list_buckets()["Buckets"]]
+    try:
+        return JSONResponse(status_code=200, content=bucket_names)
+    except Exception as err:
+        logging.info(err)
+        return JSONResponse(status_code=500, content=f"Error while listing buckets: {str(err)}")
+
+
 @app.post("/create-bucket/", tags=["Data"])
 async def create_bucket(bucket_name: str = Query("", description="")) -> JSONResponse:
     "Endpoint to create a new bucket in the server."
