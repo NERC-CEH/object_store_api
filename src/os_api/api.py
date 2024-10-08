@@ -168,7 +168,7 @@ async def upload(
         tasks = [upload_file(bucket_name, key, file) for file in files]
         await asyncio.gather(*tasks)
     except Exception as e:
-        logger.error("Error:", e)
+        logger.error(f"Error: {e}")
         return JSONResponse(status_code=500, content={str(e)})
 
     end_time = perf_counter()
