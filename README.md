@@ -115,13 +115,21 @@ AWS_URL_ENDPOINT="url goes here"
 
 This will bring up the OpenAPI documentation on localhost:8080
 
-### With uvicorn / nginx 
+### With `uvicorn` using the `fastapi` cli 
 
-TBD
+`fastapi run --workers 4 src/os_api/api.py`
 
-### In docker
+### In a container
 
-TBD if this proves useful - current deployment target is Posit Connect
+#### docker
+
+`docker build -t os_api .`
+`docker run -f -p 80:80 os_api`
+
+#### podman
+
+`podman build -t os_api .`
+`podman run --env-file=.env -p=8000 --expose=8000 os_api`
 
 ### Automatic Versioning
 

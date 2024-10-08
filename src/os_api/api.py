@@ -19,7 +19,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 # Configure logging
 logging.basicConfig(
     filename="upload_logs.log",  # Log file path on the server
-    level=logging.INFO,  # Log level
+    level=logging.DEBUG,  # Log level
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
 )
 
@@ -168,7 +168,7 @@ async def upload(
         tasks = [upload_file(bucket_name, key, file) for file in files]
         await asyncio.gather(*tasks)
     except Exception as e:
-        print("Error:", e)
+        logger.error(f"Error: {e}")
         return JSONResponse(status_code=500, content={str(e)})
 
     end_time = perf_counter()
