@@ -40,7 +40,7 @@ click==8.1.7
     # via uvicorn
 dulwich==0.22.1
     # via autosemver
-fastapi==0.112.0
+fastapi[standard]==0.112.0
     # via os_api (pyproject.toml)
 frozenlist==1.4.1
     # via

@@ -9,7 +9,7 @@ dependencies = [
     "aioboto3",
     "boto3",
     "botocore",
-    "fastapi",
+    "fastapi[standard]",
     "python-multipart",
     "python-dotenv",
     "uvicorn",
