@@ -123,13 +123,17 @@ This will bring up the OpenAPI documentation on localhost:8080
 
 #### docker
 
-`docker build -t os_api .`
-`docker run -f -p 80:80 os_api`
+```
+docker build -t os_api .
+docker run -f -p 80:80 os_api
+```
 
 #### podman
 
-`podman build -t os_api .`
-`podman run --env-file=.env -p=8000 --expose=8000 os_api`
+```
+podman build -t os_api .
+podman run --env-file=.env -p=8000 --expose=8000 os_api
+```
 
 ### Automatic Versioning
 
